@@ -1,0 +1,27 @@
+# Sensitive cert material — NEVER commit
+*.pfx
+*.p12
+*.key
+*.pem
+
+# Generated outputs
+output/*
+!output/.gitkeep
+
+# Per-user .ovpn files contain embedded private keys
+*.ovpn
+
+# But keep the Azure-generated template (no private keys in it)
+!templates/vpnconfig.ovpn
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.vscode/
+.idea/
+
+# Backup files
+*.bak
+*.backup
