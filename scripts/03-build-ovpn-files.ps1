@@ -151,6 +151,13 @@ foreach ($user in $users) {
     $ovpn = $ovpn -replace '(?m)^\s*log\s+\S+\s*$', '#log (stripped for OpenVPN Connect 3.x compatibility)'
     $ovpn = $ovpn -replace '(?m)^\s*log-append\s+\S+\s*$', '#log-append (stripped)'
 
+    # Force split-tunnel: ignore any redirect-gateway push from the server.
+    # Without this, Azure may push a default route that sends all traffic through the VPN,
+    # breaking access to public hosts like a1id.exepron.com while connected.
+    if ($ovpn -notmatch 'pull-filter\s+ignore\s+"redirect-gateway"') {
+        $ovpn = $ovpn -replace '(?m)^(client\s*)$', "`$1`r`npull-filter ignore `"redirect-gateway`""
+    }
+
     $outPath = Join-Path $outFolder "ExepronVPN_$user.ovpn"
     Set-Content -Path $outPath -Value $ovpn -Encoding ASCII -NoNewline
 
