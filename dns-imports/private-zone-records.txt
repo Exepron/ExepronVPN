@@ -1,0 +1,46 @@
+; BIND zone file for the Exepron Private DNS zone (exepron.com).
+;
+; Contains ALL records VPN-connected clients need to resolve:
+;   - Internal-only services (sales, admin, salestest, admintest) -> private IPs in 172.16.0.0/16
+;   - Public services mirrored from the public exepron.com zone -> their public IPs
+;
+; Why mirror the public records here:
+;   When a Private DNS Zone is linked to a VNet, it is authoritative for
+;   *.exepron.com queries from VNet-attached resources (which includes VPN
+;   clients via the tunnel). Missing records return NXDOMAIN; there is no
+;   fallback to public DNS. So every public name VPN users need to reach must
+;   also exist here, with the SAME public IP. Traffic to public IPs still flows
+;   over the regular internet because only 172.16.0.0/16 is routed through the
+;   VPN tunnel.
+;
+; Import command (from Azure Cloud Shell or local az CLI):
+;   az network private-dns zone import -g Exepron -n exepron.com -f private-zone-records.txt
+;
+; This is an upsert: same-name same-type records are replaced, others are
+; left untouched. Auto-managed records (SOA, NS) are not in this file and
+; remain unchanged.
+
+$ORIGIN exepron.com.
+$TTL 3600
+
+a1id            IN  A      172.208.10.68
+admin           IN  A      172.16.1.4
+admintest       IN  A      172.16.10.11
+api             IN  A      20.127.170.148
+apitest         IN  A      172.208.10.68
+app             IN  A      20.127.170.148
+bidsstest       IN  A      172.208.10.68
+learn           IN  A      172.208.10.68
+learntest       IN  A      172.208.10.68
+pals            IN  A      20.127.170.148
+palstest        IN  A      172.208.10.68
+pro             IN  A      20.127.170.148
+proid           IN  A      20.127.170.148
+sales           IN  A      172.16.1.4
+salestest       IN  A      172.16.10.11
+simshealthtest  IN  A      172.208.10.68
+sort            IN  A      20.127.170.148
+sorttest        IN  A      172.208.10.68
+strategy        IN  A      172.208.10.68
+tileserver      IN  A      172.208.10.68
+www             IN  CNAME  exepronweb-bafzc0cte7apd5hw.westus-01.azurewebsites.net.
