@@ -145,6 +145,12 @@ foreach ($user in $users) {
     $ovpn = $ovpn -replace '\$CLIENTCERTIFICATE', $certPem
     $ovpn = $ovpn -replace '\$PRIVATEKEY', $keyPem
 
+    # Strip directives that OpenVPN Connect 3.x (iOS/Android) rejects.
+    # Azure-generated templates sometimes ship these uncommented despite their own comment
+    # warning OpenVPN Connect 3.x users to comment them out.
+    $ovpn = $ovpn -replace '(?m)^\s*log\s+\S+\s*$', '#log (stripped for OpenVPN Connect 3.x compatibility)'
+    $ovpn = $ovpn -replace '(?m)^\s*log-append\s+\S+\s*$', '#log-append (stripped)'
+
     $outPath = Join-Path $outFolder "ExepronVPN_$user.ovpn"
     Set-Content -Path $outPath -Value $ovpn -Encoding ASCII -NoNewline
 
