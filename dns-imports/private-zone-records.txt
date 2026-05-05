@@ -1,46 +1,81 @@
 ; BIND zone file for the Exepron Private DNS zone (exepron.com).
 ;
-; Contains ALL records VPN-connected clients need to resolve:
-;   - Internal-only services (sales, admin, salestest, admintest) -> private IPs in 172.16.0.0/16
-;   - Public services mirrored from the public exepron.com zone -> their public IPs
+; Mirrors the entire public zone (so VPN clients can resolve every public
+; exepron.com hostname to its public IP), plus the internal-only records
+; (sales, admin, salestest, admintest) pointing to private IPs in 172.16.0.0/16.
 ;
-; Why mirror the public records here:
-;   When a Private DNS Zone is linked to a VNet, it is authoritative for
-;   *.exepron.com queries from VNet-attached resources (which includes VPN
-;   clients via the tunnel). Missing records return NXDOMAIN; there is no
-;   fallback to public DNS. So every public name VPN users need to reach must
-;   also exist here, with the SAME public IP. Traffic to public IPs still flows
-;   over the regular internet because only 172.16.0.0/16 is routed through the
-;   VPN tunnel.
+; Auto-managed records (SOA, NS) are intentionally excluded - Azure Private DNS
+; generates those automatically when the zone is created.
+;
+; Maintenance:
+;   When you add or change a record in the public zone, mirror the change here
+;   and re-import. Internal-only records live ONLY here, never in the public
+;   zone.
 ;
 ; Import command (from Azure Cloud Shell or local az CLI):
 ;   az network private-dns zone import -g Exepron -n exepron.com -f private-zone-records.txt
 ;
-; This is an upsert: same-name same-type records are replaced, others are
-; left untouched. Auto-managed records (SOA, NS) are not in this file and
-; remain unchanged.
+; This is an upsert: same-name same-type records are replaced; everything else
+; in the zone is left untouched.
 
 $ORIGIN exepron.com.
 $TTL 3600
 
-a1id            IN  A      172.208.10.68
-admin           IN  A      172.16.1.4
-admintest       IN  A      172.16.10.11
-api             IN  A      20.127.170.148
-apitest         IN  A      172.208.10.68
-app             IN  A      20.127.170.148
-bidsstest       IN  A      172.208.10.68
-learn           IN  A      172.208.10.68
-learntest       IN  A      172.208.10.68
-pals            IN  A      20.127.170.148
-palstest        IN  A      172.208.10.68
-pro             IN  A      20.127.170.148
-proid           IN  A      20.127.170.148
-sales           IN  A      172.16.1.4
-salestest       IN  A      172.16.10.11
-simshealthtest  IN  A      172.208.10.68
-sort            IN  A      20.127.170.148
-sorttest        IN  A      172.208.10.68
-strategy        IN  A      172.208.10.68
-tileserver      IN  A      172.208.10.68
-www             IN  CNAME  exepronweb-bafzc0cte7apd5hw.westus-01.azurewebsites.net.
+; --- Apex (root domain) ---
+@                    IN  A      20.59.88.1
+
+; --- Internal-only (NOT in public zone, private IPs in 172.16.0.0/16) ---
+admin                IN  A      172.16.1.4
+admintest            IN  A      172.16.10.11
+sales                IN  A      172.16.1.4
+salestest            IN  A      172.16.10.11
+
+; --- Public A records mirrored to public IPs ---
+a1id                 IN  A      172.208.10.68
+accounts             IN  A      52.72.143.180
+accountstest         IN  A      52.72.143.180
+api                  IN  A      20.127.170.148
+apidev               IN  A      174.129.193.253
+apitest              IN  A      172.208.10.68
+app                  IN  A      20.127.170.148
+app-ts               IN  A      20.127.170.148
+archive              IN  A      20.42.105.177
+beta                 IN  A      40.76.232.26
+bidsstest            IN  A      172.208.10.68
+campaign             IN  A      20.127.170.148
+development          IN  A      174.129.28.175
+docs                 IN  A      216.37.42.147
+health               IN  A      20.127.170.148
+intt                 IN  A      216.37.42.147
+learn                IN  A      172.208.10.68
+learntest            IN  A      172.208.10.68
+ma1                  IN  A      172.208.10.68
+mailm                IN  A      172.208.10.68
+onlyme               IN  A      172.208.10.68
+pals                 IN  A      20.127.170.148
+palstest             IN  A      172.208.10.68
+plugins              IN  A      20.127.170.148
+pro                  IN  A      20.127.170.148
+proid                IN  A      20.127.170.148
+sb                   IN  A      20.127.170.148
+sbox                 IN  A      52.72.143.180
+simshealthtest       IN  A      172.208.10.68
+simstest.health      IN  A      172.208.10.68
+sort                 IN  A      20.127.170.148
+sorttest             IN  A      172.208.10.68
+strategy             IN  A      172.208.10.68
+tileserver           IN  A      172.208.10.68
+ts                   IN  A      20.127.170.148
+tstest               IN  A      172.208.10.68
+videos               IN  A      44.239.201.208
+
+; --- Public CNAME records mirrored ---
+calendar                            IN  CNAME  ghs.google.com.
+google6d03653816e80966              IN  CNAME  google.com.
+mail                                IN  CNAME  ghs.google.com.
+sites                               IN  CNAME  ghs.google.com.
+start                               IN  CNAME  ghs.google.com.
+token                               IN  CNAME  dcv.digicert.com.
+video                               IN  CNAME  ghs.google.com.
+webb                                IN  CNAME  exepronwebsite-ddgbecf8h4a3gnb7.westus-01.azurewebsites.net.
+www                                 IN  CNAME  exepronweb-bafzc0cte7apd5hw.westus-01.azurewebsites.net.
